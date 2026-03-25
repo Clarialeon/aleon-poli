@@ -1,0 +1,93 @@
+package paquete_Proyecto;
+
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.Random;
+
+
+public class Proyecto_software {
+	public class GenerateInfoFiles {
+
+	    private static final String[] NOMBRES = {"Juan", "Maria", "Carlos", "Ana", "Luis", "Elena"};
+	    private static final String[] APELLIDOS = {"Perez", "Gomez", "Rodriguez", "Lopez", "Garcia", "Martine"};
+	    private static final String[] TIPOS_DOC = {"CC", "CE", "TI"};
+	    private static final String[] PRODUCTOS = {"Laptop", "Mouse", "Teclado", "Monitor", "Diadema"};
+
+	    public static void main(String[] args) {
+	        try {
+	            
+	            createProductsFile(10);
+	            
+	            
+	            createSalesManInfoFile(5);
+	            
+	           
+	            createSalesMenFile(10, "Juan_Perez", 12345678L);
+	            createSalesMenFile(8, "Maria_Gomez", 87654321L);
+
+	            System.out.println("Finalización exitosa: Todos los archivos han sido generados.");
+	        } catch (Exception e) {
+	            System.err.println("Error al generar los archivos: " + e.getMessage());
+	        }
+	    }
+	    
+	    public static void createProductsFile(int productsCount) {
+	        try (BufferedWriter writer = new BufferedWriter(new FileWriter("productos.txt"))) {
+	            Random rand = new Random();
+	            for (int i = 1; i <= productsCount; i++) {
+	                String nombre = PRODUCTOS[rand.nextInt(PRODUCTOS.length)] + " " + i;
+	                int precio = 10 + rand.nextInt(1000);
+	                writer.write(i + ";" + nombre + ";" + precio);
+	                writer.newLine();
+	            }
+	        } catch (IOException e) {
+	            System.err.println("Error creando archivo de productos: " + e.getMessage());
+	        }
+	    }
+	    public static void createSalesManInfoFile(int salesmanCount) {
+	        try (BufferedWriter writer = new BufferedWriter(new FileWriter("vendedores.txt"))) {
+	            Random rand = new Random();
+	            for (int i = 0; i < salesmanCount; i++) {
+	                String tipo = TIPOS_DOC[rand.nextInt(TIPOS_DOC.length)];
+	                long documento = 1000000L + rand.nextInt(9000000);
+	                String nombre = NOMBRES[rand.nextInt(NOMBRES.length)];
+	                String apellido = APELLIDOS[rand.nextInt(APELLIDOS.length)];
+	                
+	                writer.write(tipo + ";" + documento + ";" + nombre + ";" + apellido);
+	                writer.newLine();
+	            }
+	        } catch (IOException e) {
+	            System.err.println("Error creando archivo de información de vendedores: " + e.getMessage());
+	        }
+	    }
+
+	   
+	    public static void createSalesMenFile(int randomSalesCount, String name, long id) {
+	        String fileName = name + "_" + id + "_ventas.txt";
+	        try (BufferedWriter writer = new BufferedWriter(new FileWriter(fileName))) {
+	            Random rand = new Random();
+	            
+	            writer.write("CC;" + id); 
+	            writer.newLine();
+	            
+	            
+	            for (int i = 0; i < randomSalesCount; i++) {
+	                int idProducto = 1 + rand.nextInt(10);
+	                int cantidad = 1 + rand.nextInt(5);
+	                writer.write(idProducto + ";" + cantidad);
+	                writer.newLine();
+	            }
+	        } catch (IOException e) {
+	            System.err.println("Error creando archivo de ventas para " + name + ": " + e.getMessage());
+	        }
+	    }
+	}
+
+
+	public static void main(String[] args) {
+		// TODO Auto-generated method stub
+
+	}
+
+}
