@@ -1,0 +1,130 @@
+package paquete_Proyecto;
+import java.io.*;
+import java.util.*;
+
+public class Entrega_Semana_5 {
+
+	public static void main(String[] args) {
+		try {
+            Map<Integer, String[]> infoProductos = cargarInfoProductos();
+            Map<Long, String> infoVendedores = cargarInfoVendedores();
+            
+            Map<Long, Double> ventasTotalesVendedores = new HashMap<>();
+            Map<Integer, Integer> cantidadesProductos = new HashMap<>();
+
+            File carpetaActual = new File(".");
+            
+            File[] archivosVentas = carpetaActual.listFiles(new FilenameFilter() {
+                @Override
+                public boolean accept(File dir, String name) {
+                    return name.endsWith("_ventas.txt");
+                }
+            });
+
+            if (archivosVentas != null && archivosVentas.length > 0) {
+                for (File archivo : archivosVentas) {
+                    procesarVentas(archivo, ventasTotalesVendedores, cantidadesProductos, infoProductos);
+                }
+                
+                crearReporteVendedores(ventasTotalesVendedores, infoVendedores);
+                crearReporteProductos(cantidadesProductos, infoProductos);
+
+                System.out.println("Finalización exitosa: Reportes generados correctamente.");
+            } else {
+                System.err.println("Error: No se encontraron archivos de ventas para procesar.");
+            }
+
+        } catch (Exception e) {
+            System.err.println("Error durante la ejecución: " + e.getMessage());
+        }
+    }
+
+    private static Map<Integer, String[]> cargarInfoProductos() throws IOException {
+        Map<Integer, String[]> productos = new HashMap<>();
+        try (BufferedReader br = new BufferedReader(new FileReader("productos.txt"))) {
+            String linea;
+            while ((linea = br.readLine()) != null) {
+                String[] datos = linea.split(";");
+                productos.put(Integer.parseInt(datos[0]), new String[]{datos[1], datos[2]});
+            }
+        }
+        return productos;
+    }
+
+    private static Map<Long, String> cargarInfoVendedores() throws IOException {
+        Map<Long, String> vendedores = new HashMap<>();
+        try (BufferedReader br = new BufferedReader(new FileReader("vendedores.txt"))) {
+            String linea;
+            while ((linea = br.readLine()) != null) {
+                String[] datos = linea.split(";");
+                vendedores.put(Long.parseLong(datos[1]), datos[2] + " " + datos[3]);
+            }
+        }
+        return vendedores;
+    }
+
+    private static void procesarVentas(File archivo, Map<Long, Double> ventasVendedores, 
+                                      Map<Integer, Integer> cantidadesProductos, 
+                                      Map<Integer, String[]> infoProductos) throws IOException {
+        try (BufferedReader br = new BufferedReader(new FileReader(archivo))) {
+            String lineaVendedor = br.readLine();
+            if (lineaVendedor == null) return;
+
+            long idVendedor = Long.parseLong(lineaVendedor.split(";")[1]);
+            double acumuladoVendedor = 0;
+
+            String lineaVenta;
+            while ((lineaVenta = br.readLine()) != null) {
+                String[] datosVenta = lineaVenta.split(";");
+                int idProd = Integer.parseInt(datosVenta[0]);
+                int cant = Integer.parseInt(datosVenta[1]);
+
+                cantidadesProductos.put(idProd, cantidadesProductos.getOrDefault(idProd, 0) + cant);
+
+                if (infoProductos.containsKey(idProd)) {
+                    double precioUnidad = Double.parseDouble(infoProductos.get(idProd)[1]);
+                    acumuladoVendedor += (precioUnidad * cant);
+                }
+            }
+            ventasVendedores.put(idVendedor, ventasVendedores.getOrDefault(idVendedor, 0.0) + acumuladoVendedor);
+        }
+    }
+
+    private static void crearReporteVendedores(Map<Long, Double> ventas, Map<Long, String> nombres) throws IOException {
+        List<Map.Entry<Long, Double>> lista = new ArrayList<>(ventas.entrySet());
+        lista.sort(new Comparator<Map.Entry<Long, Double>>() {
+            @Override
+            public int compare(Map.Entry<Long, Double> e1, Map.Entry<Long, Double> e2) {
+                return e2.getValue().compareTo(e1.getValue());
+            }
+        });
+
+        try (PrintWriter escritor = new PrintWriter(new FileWriter("reporte_vendedores.csv"))) {
+            for (Map.Entry<Long, Double> entrada : lista) {
+                String nombreCompleto = nombres.getOrDefault(entrada.getKey(), "Desconocido");
+                escritor.println(nombreCompleto + ";" + entrada.getValue());
+            }
+        }
+    }
+
+    private static void crearReporteProductos(Map<Integer, Integer> cantidades, Map<Integer, String[]> info) throws IOException {
+        List<Map.Entry<Integer, Integer>> lista = new ArrayList<>(cantidades.entrySet());
+        lista.sort(new Comparator<Map.Entry<Integer, Integer>>() {
+            @Override
+            public int compare(Map.Entry<Integer, Integer> e1, Map.Entry<Integer, Integer> e2) {
+                return e2.getValue().compareTo(e1.getValue());
+            }
+        });
+
+        try (PrintWriter escritor = new PrintWriter(new FileWriter("reporte_productos.csv"))) {
+            for (Map.Entry<Integer, Integer> entrada : lista) {
+                String[] datos = info.get(entrada.getKey());
+                if (datos != null) {
+                    escritor.println(datos[0] + ";" + datos[1]);
+                }
+            }
+        }
+
+	}
+
+}
